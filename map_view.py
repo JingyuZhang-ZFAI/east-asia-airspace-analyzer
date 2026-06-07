@@ -5,7 +5,7 @@ import requests
 import pandas as pd
 import folium
 from dotenv import load_dotenv
-
+from flight_phase import add_flight_phase
 
 # ============================================================
 # 1. 配置加载
@@ -94,21 +94,21 @@ def build_dataframe(raw):
 # ============================================================
 # 4. 可视化逻辑
 # ============================================================
-def color_by_altitude(alt_ft):
+def color_by_phase(phase):
     """
-    按飞行阶段粗分染色:
-      红 - 低空(<10k ft),通常是起飞/降落/进近阶段
-      橙 - 中空(10k-25k ft),爬升或下降过渡阶段
-      绿 - 高空(≥25k ft),巡航阶段
+    Color aircraft markers by rule-based flight phase.
     """
-    if pd.isna(alt_ft):
-        return 'gray'
-    if alt_ft < 10000:
-        return 'red'
-    elif alt_ft < 25000:
-        return 'orange'
-    else:
-        return 'green'
+    if phase == "Ground":
+        return "gray"
+    if phase in ["Takeoff / Initial Climb", "Climb", "High-altitude Climb"]:
+        return "blue"
+    if phase == "Cruise":
+        return "green"
+    if phase in ["Descent", "High-altitude Descent", "Approach / Landing"]:
+        return "red"
+    if phase in ["Low Altitude", "Intermediate Level"]:
+        return "orange"
+    return "black"
 def build_popup_html(row):
     """生成鼠标点击标记点时显示的 HTML 弹窗。"""
     callsign = row['callsign'] if row['callsign'] else 'N/A'
@@ -117,6 +117,7 @@ def build_popup_html(row):
     speed = row['velocity_kmh'] if pd.notna(row['velocity_kmh']) else 0
     heading = row['true_track'] if pd.notna(row['true_track']) else 0
     country = row['origin_country']
+    phase = row.get("flight_phase", "Unknown")
 
     return f"""
     <div style="font-family: sans-serif; font-size: 13px;">
@@ -126,7 +127,8 @@ def build_popup_html(row):
       🌐 国籍: {country}<br>
       📏 高度: {altitude:,.0f} ft<br>
       💨 地速: {speed:.0f} km/h<br>
-      🧭 航向: {heading:.0f}°
+      🧭 航向: {heading:.0f}°<br>
+      ✈️ 飞行阶段: {phase}<br>
     </div>
     """
 def render_map(df):
@@ -143,14 +145,17 @@ def render_map(df):
     # 添加图例(手工拼 HTML,folium 没有内置图例组件)
     legend_html = """
     <div style="
-        position: fixed; bottom: 30px; left: 30px; z-index: 9999;
-        background: white; padding: 10px 14px; border-radius: 6px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.15); font-family: sans-serif;
-        font-size: 13px;">
-      <b>Altitude Legend</b><br>
-      <span style="color:red;">●</span> &lt; 10,000 ft (低空)<br>
-      <span style="color:orange;">●</span> 10k - 25k ft (中空)<br>
-      <span style="color:green;">●</span> ≥ 25,000 ft (巡航)
+            position: fixed; bottom: 30px; left: 30px; z-index: 9999;
+            background: white; padding: 10px 14px; border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15); font-family: sans-serif;
+            font-size: 13px;">
+        <b>Flight Phase Legend</b><br>
+        <span style="color:gray;">●</span> Ground<br>
+        <span style="color:blue;">●</span> Climb / Takeoff<br>
+        <span style="color:green;">●</span> Cruise<br>
+        <span style="color:red;">●</span> Descent / Approach<br>
+        <span style="color:orange;">●</span> Low / Intermediate Level<br>
+        <span style="color:black;">●</span> Unknown
     </div>
     """
     m.get_root().html.add_child(folium.Element(legend_html))
@@ -162,7 +167,7 @@ def render_map(df):
             radius=4,
             popup=folium.Popup(build_popup_html(row), max_width=240),
             tooltip=row['callsign'] if row['callsign'] else None,
-            color=color_by_altitude(row['altitude_ft']),
+            color=color_by_phase(row.get("flight_phase", "Unknown")),
             fill=True,
             fill_opacity=0.75,
             weight=1,
@@ -181,6 +186,11 @@ def main():
 
     raw = fetch_states()
     df = build_dataframe(raw)
+    df = add_flight_phase(df)
+
+    print("\n飞行阶段统计:")
+    print(df["flight_phase"].value_counts().to_string())
+    print()
 
     # 打印一行概要,方便运行时确认数据
     ground = df[df['on_ground'] == True].shape[0]
