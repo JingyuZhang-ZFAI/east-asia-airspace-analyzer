@@ -27,6 +27,7 @@
 - **地面态势识别** —— 区分滑行/停机航班与在飞航班
 - **交互式地图** —— 基于 Folium 的空域快照,按飞行阶段染色,支持点击查看详情
 - **工程化配置管理** —— 凭据通过 `.env` 环境变量注入,代码与配置彻底分离
+- **飞行阶段识别** —— 基于高度、垂直速度与地面状态，规则式区分爬升、巡航、下降、进近、地面等飞行阶段
 
 ## 🔍 示例发现(2026-04-20 21:00 采样)
 
@@ -103,6 +104,7 @@ east-asia-airspace-analyzer/
 ├── analyze.py              # 基础统计与可视化(生成 airspace_snapshot.png)
 ├── advanced_analysis.py    # 巡航 / 地面 / 航司深度分析(命令行报告)
 ├── map_view.py             # 交互式地图生成(生成 airspace_map.html)
+├── flight_phase.py         # 基于 ADS-B 状态变量的规则式飞行阶段识别
 ├── requirements.txt        # 依赖清单
 ├── .env.example            # 凭据配置模板
 ├── .gitignore
@@ -147,8 +149,7 @@ python map_view.py             # 生成交互地图 airspace_map.html
 
 ## 🔮 未来计划
 
-- [ ] **飞行阶段自动识别** —— 基于 `vertical_rate`(垂直速度)与
-  `baro_altitude` 自动区分起飞 / 爬升 / 巡航 / 下降 / 进近
+- [ ] **飞行阶段识别优化** —— 引入连续时间轨迹信息，减少单帧 ADS-B 数据导致的误分类
 - [ ] **历史轨迹回放** —— 接入 OpenSky 的 Flights API,
   复盘特定航班的完整飞行剖面
 - [ ] **气象关联分析** —— 结合高空风场数据,分析巡航层地速
