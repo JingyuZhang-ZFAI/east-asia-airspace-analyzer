@@ -174,7 +174,7 @@ MIT License
 
 **张京宇** —— 北京航空航天大学中法航空学院
 
-- GitHub: [@JingyuZhang777](https://github.com/JingyuZhang777)
+GitHub: [@JingyuZhang-ZFAI](https://github.com/JingyuZhang-ZFAI)
 - Email: zhangjingyu777@buaa.edu.cn
 
 如果这个项目对你有启发,欢迎 ⭐ Star;欢迎通过 Issue 提出改进建议。
