@@ -114,7 +114,7 @@ east-asia-airspace-analyzer/
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/你的用户名/east-asia-airspace-analyzer.git
+git clone https://github.com/JingyuZhang-ZFAI/east-asia-airspace-analyzer.git
 cd east-asia-airspace-analyzer
 ```
 
@@ -129,7 +129,7 @@ pip install -r requirements.txt
 > 注册账号后可提升至 ~4000 次/天、5 秒延迟。账号在
 > [opensky-network.org](https://opensky-network.org/) 免费注册。
 
-### 4. 运行
+### 3. 运行
 
 ```bash
 python analyze.py              # 生成统计图 airspace_snapshot.png
