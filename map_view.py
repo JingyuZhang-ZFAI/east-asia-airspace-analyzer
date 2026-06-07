@@ -6,6 +6,7 @@ import pandas as pd
 import folium
 from dotenv import load_dotenv
 from flight_phase import add_flight_phase
+from trajectory_prediction import add_position_prediction
 
 # ============================================================
 # 1. 配置加载
@@ -162,16 +163,27 @@ def render_map(df):
 
     # 每架飞机画一个圆点
     for _, row in df.iterrows():
+        if pd.isna(row["latitude"]) or pd.isna(row["longitude"]):
+            continue
         folium.CircleMarker(
-            location=[row['latitude'], row['longitude']],
+            location=[row["latitude"], row["longitude"]],
             radius=4,
-            popup=folium.Popup(build_popup_html(row), max_width=240),
-            tooltip=row['callsign'] if row['callsign'] else None,
             color=color_by_phase(row.get("flight_phase", "Unknown")),
             fill=True,
+            fill_color=color_by_phase(row.get("flight_phase", "Unknown")),
             fill_opacity=0.75,
-            weight=1,
+            popup=folium.Popup(build_popup_html(row), max_width=240),
+            tooltip=row["callsign"],
         ).add_to(m)
+        if pd.notna(row.get("pred_latitude")) and pd.notna(row.get("pred_longitude")):
+            folium.PolyLine(
+                locations=[
+                    [row["latitude"], row["longitude"]],
+                    [row["pred_latitude"], row["pred_longitude"]],
+                ],
+                weight=1,
+                opacity=0.5,
+            ).add_to(m)
 
     m.save(OUTPUT_HTML)
     print(f"✅ 地图已保存: {OUTPUT_HTML}")
@@ -187,6 +199,7 @@ def main():
     raw = fetch_states()
     df = build_dataframe(raw)
     df = add_flight_phase(df)
+    df = add_position_prediction(df, dt_sec=60)
 
     print("\n飞行阶段统计:")
     print(df["flight_phase"].value_counts().to_string())
