@@ -95,8 +95,6 @@ CNS/ATM 的基础概念,在真实 ADS-B 数据中得到直观印证。
 
 ## 📁 项目结构
 
-## 📁 项目结构
-
 ```text
 east-asia-airspace-analyzer/
 ├── analyze.py                 # 基础统计与可视化（生成 airspace_snapshot.png）
